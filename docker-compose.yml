@@ -1,9 +1,41 @@
-version: '2'
 services:
-  php:
-    image: yiisoftware/yii2-php:7.4-apache
+  app:
+    image: yiisoftware/yii2-php:8.1-apache 
     volumes:
       - ~/.composer-docker/cache:/root/.composer/cache:delegated
       - ./:/app:delegated
     ports:
       - '8000:80'
+    depends_on:
+      - db
+    env_file:
+      - .env
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: support_db
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - '3306:3306'
+    volumes:
+      - db_data:/var/lib/mysql
+      
+  queue-worker:
+    image: yiisoftware/yii2-php:8.1-apache 
+    container_name: yii-queue-worker
+    volumes:
+      - .:/app
+    command: php yii queue/listen
+    depends_on:
+      - db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+
+volumes:
+  db_data:

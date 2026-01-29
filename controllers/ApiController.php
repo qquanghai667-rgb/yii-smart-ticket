@@ -14,7 +14,7 @@ class ApiController extends Controller
         $model->attributes = Yii::$app->request->post();
 
         if ($model->save()) {
-            // Đẩy vào hàng đợi
+            
             Yii::$app->queue->push(new ProcessAIJob(['ticketId' => $model->id]));
             
             return [

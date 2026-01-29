@@ -6,7 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log'],
+    'bootstrap' => ['log', 'queue'],
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
@@ -15,6 +15,9 @@ $config = [
         'request' => [
             // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
             'cookieValidationKey' => 'WwP7-gmOV23w0MagG8zZnp-4KAV36bfC',
+            'parsers' => [
+            'application/json' => 'yii\web\JsonParser',
+        ]
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -42,14 +45,22 @@ $config = [
             ],
         ],
         'db' => $db,
-        /*
+        
         'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
-            'rules' => [
-            ],
+        'enablePrettyUrl' => true,
+        'showScriptName' => false,
+        'rules' => [
+            'POST ticket/create' => 'ticket/create',
+                ],
         ],
-        */
+        
+        'queue' => [
+        'class' => \yii\queue\db\Queue::class,
+        'db' => 'db',
+        'tableName' => '{{%queue}}',
+        'channel' => 'default',
+        'mutex' => \yii\mutex\MysqlMutex::class,
+    ],
     ],
     'params' => $params,
 ];
