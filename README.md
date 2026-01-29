@@ -43,8 +43,8 @@ docker-compose exec app composer install
 # Run migrations (creates ticket and queue tables)
 docker-compose exec app php yii migrate
 
+## 📡 Usage Guide (Postman)
 
-📡 Usage Guide (Postman)
 To simulate a new customer support request, send a POST request:
 
 Endpoint: http://localhost:8000/ticket/create
@@ -68,7 +68,8 @@ JSON
     "queue_job_id": 12
 }
 
-📝 Logging & Flow Tracking
+## 📝 Logging & Flow Tracking
+
 The system logs the entire lifecycle of a ticket. You can search for a specific [Ticket ID XXXX] to see the full flow.
 
 View Real-time Logs
