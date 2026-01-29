@@ -1,4 +1,16 @@
 /vendor/
+vendor
 /runtime/*
+!/runtime/.gitignore
 /web/assets/*
-.env
+!/web/assets/.gitignore
+/config/db.php
+/config/test_db.php
+/.env
+.dbdata/
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
