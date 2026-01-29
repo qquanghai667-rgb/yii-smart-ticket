@@ -1,101 +1,178 @@
+
 # 🎫 Yii2 AI-Powered Smart Ticket System
+
+  
 
 An automated support ticket management system integrated with **Groq AI (Llama 3)** to perform real-time sentiment analysis, ticket categorization, and automated response generation.
 
+  
+
 ---
+
+  
 
 ## 🚀 Key Features
-* **Asynchronous Processing:** Uses Yii2 Queue (DB Driver) to handle AI tasks without slowing down the user experience.
-* **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and Vietnamese response suggestions.
-* **Full Flow Logging:** Every step is tracked in a dedicated log file (`ticket_flow.log`) mapped by Ticket ID.
-* **Containerized Architecture:** Fully dockerized for consistent development and deployment environments.
+
+*  **Asynchronous Processing:** Uses Yii2 Queue (DB Driver) to handle AI tasks without slowing down the user experience.
+
+*  **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and Vietnamese response suggestions.
+
+*  **Full Flow Logging:** Every step is tracked in a dedicated log file (`ticket_flow.log`) mapped by Ticket ID.
+
+*  **Containerized Architecture:** Fully dockerized for consistent development and deployment environments.
+
+  
 
 ---
+
+  
 
 ## 🛠 Prerequisites
+
 * [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
+
 * [Postman](https://www.postman.com/) (for API testing)
-* **Groq API Key:** Obtain yours from the [Groq Cloud Console](https://console.groq.com/).
+
+*  **Groq API Key:** Obtain yours from the [Groq Cloud Console](https://console.groq.com/).
+
+  
 
 ---
+
+  
 
 ## 📥 Installation & Setup
 
+  
+
 ### 1. Environment Configuration
+
 Clone the repository and create your local environment file:
-```bash
-cp .env.example .env
+
+
+
+cp  .env.example  .env
+
+  
 
 GROQ_API_KEY=gsk_your_actual_key_here
 
+  
+
 ### 2. Launch Services
-Start the application, database, and background worker containers:
-```bash
-docker-compose up -d
+
+Start  the  application,  database,  and  background  worker  containers:
+
+
+
+    docker-compose up -d
+
+  
 
 ### 3. Initialize Application
+
 Install PHP dependencies and run the database migrations:
+**Install Composer packages**
 
-```bash
-# Install Composer packages
-docker-compose exec app composer install
+    docker-compose  exec  app  composer  install
+**Run migrations (creates ticket and queue tables)**
 
-# Run migrations (creates ticket and queue tables)
-docker-compose exec app php yii migrate
+    docker-compose  exec  app  php  yii  migrate
 
-## 📡 Usage Guide (Postman)
+  ## 📡 Usage Guide (Postman)
 
-To simulate a new customer support request, send a POST request:
+  
 
-Endpoint: http://localhost:8000/ticket/create
+To  simulate  a  new  customer  support  request,  send  a  POST  request:
 
-Method: POST
+  
 
-Headers: Content-Type: application/json
+Endpoint:  http://localhost:8000/ticket/create
+
+  
+
+Method:  POST
+
+  
+
+Headers:  Content-Type:  application/json
+
+  
 
 Body:
 
+  
+
 JSON
-{
-    "title": "Application Login Issue",
-    "description": "I receive a 403 error whenever I try to access the dashboard since this morning."
-}
-Expected Response:
+
+    {
+    
+    "title":  "Application Login Issue",
+    
+    "description":  "I receive a 403 error whenever I try to access the dashboard since this morning."
+    
+    }
+
+Expected  Response:
+
 JSON
-{
-    "status": "success",
-    "ticket_id": 27,
-    "queue_job_id": 12
-}
+
+    {
+    
+    "status":  "success",
+    
+    "ticket_id":  27,
+    
+    "queue_job_id":  12
+    
+    }
+
+  
 
 ## 📝 Logging & Flow Tracking
 
-The system logs the entire lifecycle of a ticket. You can search for a specific [Ticket ID XXXX] to see the full flow.
+  
 
-View Real-time Logs
-Monitor the AI processing live via terminal to see the "Step-by-Step" flow:
+The  system  logs  the  entire  lifecycle  of  a  ticket.  You  can  search  for  a  specific [Ticket ID  XXXX]  to  see  the  full  flow.
+
+  
+
+View  Real-time  Logs
+
+Monitor  the  AI  processing  live  via  terminal  to  see  the  "Step-by-Step"  flow:
+
+  
 
 Bash
-docker-compose exec app tail -f runtime/logs/ticket_flow.log
-Filter Logs by Ticket ID
-To track the specific journey of Ticket #27:
 
-Bash
-docker-compose exec app grep "Ticket ID 27" runtime/logs/ticket_flow.log
-Log Structure Detail:
-STEP 1: Ticket successfully saved to MySQL.
+    docker-compose  exec  app  tail  -f  runtime/logs/ticket_flow.log
 
-STEP 2: Task pushed to queue table with a unique Job ID.
+Filter  Logs  by  Ticket  ID
 
-STEP 3: Background Worker picks up the job, sends data to Groq AI.
+To  track  the  specific  journey  of  Ticket  #27:
 
-STEP 4: AI response (JSON) is parsed and saved back to the Ticket record.
+    docker-compose  exec  app  grep  "Ticket ID 27"  runtime/logs/ticket_flow.log
 
-📂 Project Architecture
-controllers/TicketController.php - API Entry point & Queue dispatcher.
+Log  Structure  Detail:
 
-models/jobs/ProcessAIJob.php - Core Logic: Communicates with Groq AI and updates the DB.
+STEP  1:  Ticket  successfully  saved  to  MySQL.
 
-docker-compose.yml - Defines services including the background queue-worker.
+  
 
-.env - Secure storage for sensitive API keys (ignored by Git).
+STEP  2:  Task  pushed  to  queue  table  with  a  unique  Job  ID.
+
+  
+
+STEP  3:  Background  Worker  picks  up  the  job,  sends  data  to  Groq  AI.
+
+  
+
+STEP  4:  AI  response (JSON) is parsed and saved back to the Ticket record.
+
+  
+## 📂  Project  Architecture
+
+1 - controllers/TicketController.php  -  API  Entry  point & Queue     dispatcher. 
+2 - models/jobs/ProcessAIJob.php  -  Core  Logic:     Communicates  with  Groq  AI  and  updates  the  DB.
+3 - docker-compose.yml  -  Defines  services  including  the  background queue-worker. 
+4 - .env  -  Secure  storage  for  sensitive  API  keys    (ignored by  Git)
