@@ -15,7 +15,7 @@ An automated support ticket management system integrated with **Groq AI (Llama 3
 
 *  **Asynchronous Processing:** Uses Yii2 Queue (DB Driver) to handle AI tasks without slowing down the user experience.
 
-*  **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and English response suggestions.
+*  **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and Vietnamese response suggestions.
 
 *  **Full Flow Logging:** Every step is tracked in a dedicated log file (`ticket_flow.log`) mapped by Ticket ID.
 
@@ -78,7 +78,19 @@ Install PHP dependencies and run the database migrations:
 
     docker-compose  exec  app  php  yii  migrate
 ---
+## 🛡️ Resilience & Fault Tolerance (Retry Strategy)
 
+In an enterprise environment, external API calls (like Groq AI) can fail due to network jitters, rate limits, or temporary service outages. This system implements a robust **Retry Mechanism** to handle these transient failures automatically.
+
+### How it Works:
+
+-   **Interface-Driven:** The `ProcessAIJob` implements `RetryableJobInterface`. This allows the Yii2 Queue worker to catch exceptions and manage re-execution logic without manual intervention.
+    
+-   **Smart Decision Making:** The `canRetry($attempt, $error)` method is automatically invoked by the Queue Runner whenever an exception is thrown.
+    
+-   **Exponential Backoff & Limits:** * **Max Attempts:** Configured to **3 attempts**. If the AI processing fails 3 times, it is marked as failed to prevent infinite loops and resource exhaustion.
+    
+    -   **TTR (Time To Run):** Set to **60 seconds**, ensuring that hung processes are released and retried by other available workers.
 ## 🧠 AI Intelligence & Strategy
 
 ### Prompt Strategy
