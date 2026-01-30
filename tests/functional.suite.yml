@@ -1,14 +1,19 @@
-# Codeception Test Suite Configuration
-
-# suite for functional (integration) tests.
-# emulate web requests and make application process them.
-# (tip: better to use with frameworks).
-
-# RUN `build` COMMAND AFTER ADDING/REMOVING MODULES.
-#basic/web/index.php
+suite_namespace: tests\functional
 actor: FunctionalTester
 modules:
     enabled:
-      - Filesystem
-      - Yii2
-      - Asserts
+        - Filesystem
+        - Yii2:
+            part: [ORM, Email, Fixtures]
+            cleanup: false
+            entryScript: index-test.php
+        - REST:
+            depends: Yii2
+        - Db:
+            depends: Yii2
+            dsn: 'mysql:host=db;dbname=support_db'
+            user: 'root'
+            password: 'root'
+            populate: false
+            cleanup: false
+        - Asserts

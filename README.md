@@ -49,13 +49,12 @@ An automated support ticket management system integrated with **Groq AI (Llama 3
 
 Clone the repository and create your local environment file:
 
-
-
-cp  .env.example  .env
+    cp  .env.example  .env
 
   
+Then in the .env file, put the key you register from Grog here
 
-GROQ_API_KEY=gsk_your_actual_key_here
+    GROQ_API_KEY=gsk_your_actual_key_here
 
   
 
@@ -78,7 +77,19 @@ Install PHP dependencies and run the database migrations:
 **Run migrations (creates ticket and queue tables)**
 
     docker-compose  exec  app  php  yii  migrate
+---
 
+## 🧠 AI Intelligence & Strategy
+
+### Prompt Strategy
+Our system uses a **System-Role Prompting** strategy. By defining the AI as a "Support Assistant that outputs JSON," we ensure the response is always machine-readable. We use explicit constraints such as `MUST be in English` and `response_format: {type: json_object}` to prevent the AI from returning conversational filler or incorrect languages.
+
+### Context Awareness
+The AI doesn't just categorize; it performs **Sentiment-Urgency Mapping**. It analyzes the emotional tone of the user's description (e.g., "frustrated", "urgent", "broken") to dynamically assign urgency. 
+- **Negative Sentiment + System Down** → `High Urgency`
+- **Neutral Sentiment + Question** → `Medium/Low Urgency`
+
+---
   ## 📡 Usage Guide (Postman)
 
   
@@ -179,3 +190,20 @@ STEP  4:  AI  response (JSON) is parsed and saved back to the Ticket record.
 3 - docker-compose.yml  -  Defines  services  including  the  background queue-worker. 
 
 4 - .env  -  Secure  storage  for  sensitive  API  keys    (ignored by  Git)
+
+---
+
+## 🧪 Automated Testing
+
+### Running Tests inside Docker
+To ensure the system is functioning correctly, you can execute the functional tests using the following command:
+
+    docker-compose exec app php vendor/bin/codecept run functional TicketCest
+
+### Why do we need this test?
+
+-   **API Verification:** Ensures the Controller correctly handles JSON payloads and prevents `500 Internal Server Error`.
+    
+-   **Database Integrity:** Confirms that the Ticket record is actually persisted in the MySQL database.
+    
+-   **Queue Validation:** Verifies the system has successfully dispatched the AI processing task to the `queue` table.
