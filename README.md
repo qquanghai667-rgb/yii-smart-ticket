@@ -183,13 +183,15 @@ STEP  4:  AI  response (JSON) is parsed and saved back to the Ticket record.
   
 ## 📂  Project  Architecture
 
-1 - controllers/TicketController.php  -  API  Entry  point & Queue     dispatcher. 
-
-2 - models/jobs/ProcessAIJob.php  -  Core  Logic:     Communicates  with  Groq  AI  and  updates  the  DB.
-
-3 - docker-compose.yml  -  Defines  services  including  the  background queue-worker. 
-
-4 - .env  -  Secure  storage  for  sensitive  API  keys    (ignored by  Git)
+-   **`services/TicketService.php`**: The core engine containing all business rules and coordinating between the Repository and the Queue.
+    
+-   **`repositories/TicketRepository.php`**: Encapsulates all data access logic. This layer ensures that the Service doesn't need to know about the underlying database implementation.
+    
+-   **`jobs/ProcessAIJob.php`**: The worker logic responsible for asynchronous AI integration and Groq API communication.
+    
+-   **`models/Ticket.php`**: The ActiveRecord model representing the database schema and standardized status/urgency constants.
+    
+-   **`config/web.php` & `config/console.php`**: Synchronized Dependency Injection (DI) and Queue configurations.
 
 ---
 
