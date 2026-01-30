@@ -6,12 +6,7 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic-console',
     'basePath' => dirname(__DIR__),
-    'bootstrap' => ['log','queue'],
-    'controllerMap' => [
-        'queue' => [
-            'class' => \yii\queue\db\Command::class,
-        ],
-    ],
+    'bootstrap' => ['log', 'queue'],
     'controllerNamespace' => 'app\commands',
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
@@ -28,9 +23,18 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+               
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info', 'error'],
+                    'categories' => ['ticket_flow'],
+                    'logFile' => '@runtime/logs/ticket_flow.log',
+                    'logVars' => [], 
+                ],
             ],
         ],
         'db' => $db,
+       
         'queue' => [
             'class' => \yii\queue\db\Queue::class,
             'db' => 'db',
@@ -40,22 +44,17 @@ $config = [
         ],
     ],
     'params' => $params,
-
 ];
 
 if (YII_ENV_DEV) {
-    // configuration adjustments for 'dev' environment
+    // Configuration adjustments for 'dev' environment
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
     ];
-    // configuration adjustments for 'dev' environment
-    // requires version `2.1.21` of yii2-debug module
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
     ];
 }
 

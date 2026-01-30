@@ -4,106 +4,109 @@ namespace app\models\jobs;
 
 use Yii;
 use yii\base\BaseObject;
-use yii\queue\JobInterface;
+use yii\queue\RetryableJobInterface;
 use app\models\Ticket;
 use GuzzleHttp\Client;
 
-/**
- * Job class to process tickets using Groq AI
- */
-class ProcessAIJob extends BaseObject implements JobInterface
+class ProcessAIJob extends BaseObject implements RetryableJobInterface
 {
-    /** @var int ID of the ticket to be processed */
+    /** @var int */
     public $ticketId;
 
-    /** @var string Groq API Key fetched from environment variables */
-    private $apiKey;
+    /**
+     * TTR (Time to Run) in seconds
+     */
+    public function getTtr()
+    {
+        return 60; 
+    }
 
     /**
-     * Executes the job
-     * @param \yii\queue\Queue $queue
+     * Retry if job failed
      */
+    public function canRetry($attempt, $error)
+    {
+        return $attempt < 3;
+    }
+
     public function execute($queue)
     {
-        $this->apiKey = getenv('GROQ_API_KEY');
-        // Fetch the ticket from database
         $ticket = Ticket::findOne($this->ticketId);
         if (!$ticket) {
             return;
         }
 
-        $logFile = Yii::getAlias('@runtime/logs/ticket_flow.log');
-        $timestamp = date('Y-m-d H:i:s');
-        $logMsg = "[$timestamp] [Ticket ID {$this->ticketId}] STEP 3: Groq AI Processing Started.\n";
+        Yii::info("STEP 3: Groq AI Processing Started for Ticket ID: {$this->ticketId}", 'ticket_flow');
 
         try {
-            $client = new Client();
-            
-            // Prepare the prompt for the AI
-            $prompt = "Analyze the following support ticket:
-                Title: {$ticket->title}
-                Description: {$ticket->description}
-                
-                Return a JSON object with the following fields:
-                - category: (Technical, Billing, or General)
-                - sentiment: (Positive, Negative, or Neutral)
-                - urgency: (High, Medium, or Low)
-                - reply: (A polite response in English)";
+            $apiKey = getenv('GROQ_API_KEY');
+            $client = new Client(['timeout' => 30]);
 
-            // Send request to Groq API
+            $prompt = $this->generatePrompt($ticket);
+
             $response = $client->post("https://api.groq.com/openai/v1/chat/completions", [
                 'headers' => [
-                    'Authorization' => "Bearer {$this->apiKey}",
+                    'Authorization' => "Bearer {$apiKey}",
                     'Content-Type'  => 'application/json',
                 ],
                 'json' => [
                     'model' => 'llama-3.3-70b-versatile',
                     'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => 'You are a helpful assistant that always outputs JSON.'
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => $prompt
-                        ]
+                        ['role' => 'system', 'content' => 'You are a helpful assistant that always outputs JSON.'],
+                        ['role' => 'user', 'content' => $prompt]
                     ],
-                    // Enable JSON mode to ensure valid JSON response
                     'response_format' => ['type' => 'json_object']
                 ]
             ]);
 
-            // Decode API response
             $result = json_decode($response->getBody()->getContents(), true);
-            $content = $result['choices'][0]['message']['content'] ?? '';
-            $data = json_decode($content, true);
+            $data = json_decode($result['choices'][0]['message']['content'] ?? '{}', true);
 
-            $logMsg .= "[$timestamp] [Ticket ID {$this->ticketId}] AI RESULT: " . json_encode($data, JSON_UNESCAPED_UNICODE) . "\n";
-
-            if ($data) {
-                // Update ticket fields with AI analysis results
-                $ticket->category = $data['category'] ?? 'General';
-                $ticket->sentiment = $data['sentiment'] ?? 'Neutral';
-                $ticket->urgency = $data['urgency'] ?? 'Medium';
-                $ticket->suggested_reply = $data['reply'] ?? '';
-                $ticket->status = 'Processed';
-
-                if ($ticket->save()) {
-                    $logMsg .= "[$timestamp] [Ticket ID {$this->ticketId}] STEP 4: DB Update Success. Flow Completed.\n";
-                } else {
-                    $logMsg .= "[$timestamp] [Ticket ID {$this->ticketId}] STEP 4 ERROR: Validation failed. " . json_encode($ticket->errors) . "\n";
-                }
-            } else {
-                $logMsg .= "[$timestamp] [Ticket ID {$this->ticketId}] ERROR: Failed to parse AI JSON response.\n";
+            if (empty($data)) {
+                throw new \Exception("Empty AI response for Ticket ID: {$this->ticketId}");
             }
 
-        } catch (\Exception $e) {
-            // Log any errors occurred during API call or processing
-            $logMsg .= "[$timestamp] [Ticket ID {$this->ticketId}] AI FATAL ERROR: " . $e->getMessage() . "\n";
-        }
+            Yii::info("AI RESULT for ID {$this->ticketId}: " . json_encode($data), 'ticket_flow');
 
-        // Finalize log entry
-        $logMsg .= "--------------------------------------------------------------------------------\n";
-        file_put_contents($logFile, $logMsg, FILE_APPEND);
+            $this->updateTicket($ticket, $data);
+
+        } catch (\Exception $e) {
+            Yii::error("AI FATAL ERROR (Ticket ID {$this->ticketId}): " . $e->getMessage(), 'ticket_flow');
+            throw $e; 
+        }
+    }
+
+    /**
+     * Tách logic generate prompt (Architecture)
+     */
+    private function generatePrompt($ticket)
+    {
+        return "Analyze the following support ticket:
+                Title: {$ticket->title}
+                Description: {$ticket->description}
+                
+                Return a JSON object:
+                - category: (Technical, Billing, or General)
+                - sentiment: (Positive, Negative, or Neutral)
+                - urgency: (High, Medium, or Low)
+                - reply: (A polite response in English)";
+    }
+
+    /**
+     * logic update DB (Architecture)
+     */
+    private function updateTicket(Ticket $ticket, array $data)
+    {
+        $ticket->category = $data['category'] ?? 'General';
+        $ticket->sentiment = $data['sentiment'] ?? 'Neutral';
+        $ticket->urgency = $data['urgency'] ?? 'Medium';
+        $ticket->suggested_reply = $data['reply'] ?? '';
+        $ticket->status = Ticket::STATUS_PROCESSED;
+
+        if ($ticket->save()) {
+            Yii::info("STEP 4: DB Update Success for ID: {$this->ticketId}. Flow Completed.", 'ticket_flow');
+        } else {
+            Yii::error("STEP 4 ERROR (ID {$this->ticketId}): Validation failed. " . json_encode($ticket->errors), 'ticket_flow');
+        }
     }
 }

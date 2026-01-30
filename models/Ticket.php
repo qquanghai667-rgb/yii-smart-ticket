@@ -2,26 +2,23 @@
 namespace app\models;
 
 use yii\db\ActiveRecord;
-use yii\behaviors\TimestampBehavior;
 
 class Ticket extends ActiveRecord
 {
-    public static function tableName() { return '{{%ticket}}'; }
+    const STATUS_OPEN = 'Open';
+    const STATUS_PROCESSED = 'Processed';
 
-    // public function behaviors() {
-    //     return [
-    //         [
-    //             'class' => TimestampBehavior::class,
-    //             'updatedAtAttribute' => false,
-    //         ],
-    //     ];
-    // }
+    const URGENCY_LOW = 'Low';
+    const URGENCY_MEDIUM = 'Medium';
+    const URGENCY_HIGH = 'High';
+    
+    public static function tableName() { return '{{%ticket}}'; }
 
     public function rules() {
         return [
             [['title', 'description'], 'required'],
             [['description', 'suggested_reply'], 'string'],
-            [['status'], 'default', 'value' => 'Open'],
+            [['status'], 'default', 'value' => self::STATUS_OPEN],
             [['category', 'sentiment', 'urgency'], 'string', 'max' => 50],
         ];
     }

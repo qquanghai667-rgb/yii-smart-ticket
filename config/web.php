@@ -6,18 +6,32 @@ $db = require __DIR__ . '/db.php';
 $config = [
     'id' => 'basic',
     'basePath' => dirname(__DIR__),
+    
+   
     'bootstrap' => ['log', 'queue'],
+    
     'aliases' => [
         '@bower' => '@vendor/bower-asset',
         '@npm'   => '@vendor/npm-asset',
     ],
+
+    
+    'container' => [
+        'definitions' => [
+            'app\services\TicketService' => [
+                'class' => 'app\services\TicketService',
+            ],
+        ],
+    ],
+
+    
     'components' => [
         'request' => [
-            // !!! insert a secret key in the following (if it is empty) - this is required by cookie validation
+            // !!! insert a secret key in the following (if it is empty)
             'cookieValidationKey' => 'WwP7-gmOV23w0MagG8zZnp-4KAV36bfC',
             'parsers' => [
-            'application/json' => 'yii\web\JsonParser',
-        ]
+                'application/json' => 'yii\web\JsonParser',
+            ]
         ],
         'cache' => [
             'class' => 'yii\caching\FileCache',
@@ -32,9 +46,10 @@ $config = [
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
             'viewPath' => '@app/mail',
-            // send all mails to a file by default.
             'useFileTransport' => true,
         ],
+        
+        
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
@@ -42,43 +57,48 @@ $config = [
                     'class' => 'yii\log\FileTarget',
                     'levels' => ['error', 'warning'],
                 ],
+                [
+                    'class' => 'yii\log\FileTarget',
+                    'levels' => ['info', 'error'],
+                    'categories' => ['ticket_flow'],
+                    'logFile' => '@runtime/logs/ticket_flow.log',
+                    'logVars' => [], 
+                ],
             ],
         ],
-        'db' => $db,
         
+        'db' => $db,
+
         'urlManager' => [
-        'enablePrettyUrl' => true,
-        'showScriptName' => false,
-        'rules' => [
-            'POST ticket/create' => 'ticket/create',
-                ],
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
+            'rules' => [
+                'POST ticket/create' => 'ticket/create',
+            ],
         ],
+
         
         'queue' => [
-        'class' => \yii\queue\db\Queue::class,
-        'db' => 'db',
-        'tableName' => '{{%queue}}',
-        'channel' => 'default',
-        'mutex' => \yii\mutex\MysqlMutex::class,
-    ],
+            'class' => \yii\queue\db\Queue::class,
+            'db' => 'db',
+            'tableName' => '{{%queue}}',
+            'channel' => 'default',
+            'mutex' => \yii\mutex\MysqlMutex::class,
+        ],
     ],
     'params' => $params,
 ];
 
 if (YII_ENV_DEV) {
-    // configuration adjustments for 'dev' environment
+    // Configuration adjustments for 'dev' environment
     $config['bootstrap'][] = 'debug';
     $config['modules']['debug'] = [
         'class' => 'yii\debug\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
     ];
 
     $config['bootstrap'][] = 'gii';
     $config['modules']['gii'] = [
         'class' => 'yii\gii\Module',
-        // uncomment the following to add your IP if you are not connecting from localhost.
-        //'allowedIPs' => ['127.0.0.1', '::1'],
     ];
 }
 

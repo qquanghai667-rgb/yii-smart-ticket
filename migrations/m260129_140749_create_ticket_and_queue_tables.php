@@ -6,7 +6,7 @@ class m260129_140749_create_ticket_and_queue_tables extends Migration
 {
     public function safeUp()
     {
-        // 1. Tạo bảng Ticket
+        
         $this->createTable('{{%ticket}}', [
             'id' => $this->primaryKey(),
             'title' => $this->string()->notNull(),
@@ -19,7 +19,7 @@ class m260129_140749_create_ticket_and_queue_tables extends Migration
             'created_at' => $this->integer(),
         ]);
 
-        // 2. Tạo bảng Queue
+        
         $this->createTable('{{%queue}}', [
             'id' => $this->primaryKey(),
             'channel' => $this->string()->notNull(),
