@@ -1,6 +1,6 @@
 <?php
 
-namespace app\models\jobs;
+namespace app\jobs;
 
 use Yii;
 use yii\base\BaseObject;

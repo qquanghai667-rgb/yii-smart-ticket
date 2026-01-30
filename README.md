@@ -15,7 +15,7 @@ An automated support ticket management system integrated with **Groq AI (Llama 3
 
 *  **Asynchronous Processing:** Uses Yii2 Queue (DB Driver) to handle AI tasks without slowing down the user experience.
 
-*  **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and Vietnamese response suggestions.
+*  **Groq AI Integration:** Leverages Llama 3 for near-instant ticket analysis and English response suggestions.
 
 *  **Full Flow Logging:** Every step is tracked in a dedicated log file (`ticket_flow.log`) mapped by Ticket ID.
 

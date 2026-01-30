@@ -3,7 +3,7 @@ namespace app\services;
 
 use Yii;
 use app\models\Ticket;
-use app\models\jobs\ProcessAIJob;
+use app\jobs\ProcessAIJob;
 use app\repositories\TicketRepository;
 use yii\base\Exception;
 
